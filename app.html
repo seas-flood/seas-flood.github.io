@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Flood Forecast Mobile - Central Vietnam</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1e3c72">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Animated Background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.4) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.4) 0%, transparent 50%);
+      z-index: -1;
+      animation: backgroundShift 15s ease-in-out infinite;
+    }
+
+    @keyframes backgroundShift {
+      0%, 100% { transform: translateX(0) translateY(0) scale(1); }
+      25% { transform: translateX(-5px) translateY(-5px) scale(1.02); }
+      50% { transform: translateX(5px) translateY(-3px) scale(1.01); }
+      75% { transform: translateX(-3px) translateY(5px) scale(1.03); }
+    }
+
+    /* SEAS Logo Floating */
+    .seas-logo {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      width: 50px;
+      height: 50px;
+      z-index: 1000;
+      animation: gentleFloat 4s ease-in-out infinite;
+      transition: all 0.3s ease;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 5px;
+    }
+
+    .seas-logo:hover {
+      transform: scale(1.15);
+      filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4));
+    }
+
+    @keyframes gentleFloat {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-6px) rotate(2deg); }
+    }
+
+    /* Header with Enhanced Effects */
+    .header {
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      color: white;
+      padding: 20px 15px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      min-height: 120px;
+      border-radius: 0 0 25px 25px;
+    }
+
+    /* 3D Flood Effect - Water Waves */
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(ellipse at 20% 80%, rgba(0, 150, 255, 0.5) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(0, 200, 255, 0.4) 0%, transparent 50%),
+        radial-gradient(ellipse at 40% 40%, rgba(0, 100, 255, 0.6) 0%, transparent 50%),
+        radial-gradient(ellipse at 60% 60%, rgba(0, 180, 255, 0.4) 0%, transparent 50%);
+      animation: waterFlow 6s ease-in-out infinite;
+      filter: blur(1px);
+    }
+
+    /* 3D Water Surface */
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background: 
+        linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%),
+        linear-gradient(-45deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%);
+      background-size: 80px 80px, 60px 60px;
+      animation: waterSurface 4s linear infinite;
+      transform: perspective(800px) rotateX(60deg);
+      transform-origin: bottom;
+      filter: blur(0.5px);
+    }
+
+    /* Floating Debris */
+    .floating-debris {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+    }
+
+    .debris {
+      position: absolute;
+      font-size: 18px;
+      opacity: 0.8;
+      animation: float 5s ease-in-out infinite;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+      text-shadow: 0 0 8px rgba(255,255,255,0.6);
+    }
+
+    .debris:nth-child(even) {
+      font-size: 16px;
+      animation-duration: 7s;
+      opacity: 0.6;
+    }
+
+    .debris:nth-child(3n) {
+      font-size: 20px;
+      animation-duration: 4s;
+      opacity: 0.9;
+    }
+
+    .debris:nth-child(1) { top: 15%; left: 10%; animation-delay: 0s; }
+    .debris:nth-child(2) { top: 35%; left: 85%; animation-delay: 1s; }
+    .debris:nth-child(3) { top: 55%; left: 15%; animation-delay: 2s; }
+    .debris:nth-child(4) { top: 25%; left: 75%; animation-delay: 3s; }
+    .debris:nth-child(5) { top: 65%; left: 65%; animation-delay: 4s; }
+
+    /* 3D Rain Drops */
+    .rain-container {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+    }
+
+    .rain-drop {
+      position: absolute;
+      width: 1.5px;
+      height: 20px;
+      background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.9));
+      border-radius: 0 0 2px 2px;
+      animation: rain 1s linear infinite;
+      box-shadow: 0 0 3px rgba(255,255,255,0.5);
+    }
+
+    .rain-drop:nth-child(even) {
+      width: 1px;
+      height: 15px;
+      animation-duration: 1.3s;
+      opacity: 0.7;
+    }
+
+    .rain-drop:nth-child(3n) {
+      width: 2px;
+      height: 25px;
+      animation-duration: 0.8s;
+      opacity: 1;
+    }
+
+    .rain-drop:nth-child(1) { left: 5%; animation-delay: 0s; }
+    .rain-drop:nth-child(2) { left: 15%; animation-delay: 0.1s; }
+    .rain-drop:nth-child(3) { left: 25%; animation-delay: 0.2s; }
+    .rain-drop:nth-child(4) { left: 35%; animation-delay: 0.3s; }
+    .rain-drop:nth-child(5) { left: 45%; animation-delay: 0.4s; }
+    .rain-drop:nth-child(6) { left: 55%; animation-delay: 0.5s; }
+    .rain-drop:nth-child(7) { left: 65%; animation-delay: 0.6s; }
+    .rain-drop:nth-child(8) { left: 75%; animation-delay: 0.7s; }
+    .rain-drop:nth-child(9) { left: 85%; animation-delay: 0.8s; }
+    .rain-drop:nth-child(10) { left: 95%; animation-delay: 0.9s; }
+
+    /* 3D Flood Water Level Indicator */
+    .water-level {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 40px;
+      background: 
+        linear-gradient(to top, rgba(0, 150, 255, 0.8), rgba(0, 200, 255, 0.5)),
+        linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%);
+      background-size: 100% 100%, 40px 40px;
+      transform: perspective(800px) rotateX(45deg);
+      transform-origin: bottom;
+      animation: waterRise 5s ease-in-out infinite;
+      box-shadow: 
+        0 0 25px rgba(0, 150, 255, 0.7),
+        0 0 50px rgba(0, 100, 255, 0.4),
+        inset 0 0 15px rgba(255,255,255,0.1);
+      filter: blur(0.5px);
+    }
+
+    /* 3D Animations */
+    @keyframes waterFlow {
+      0%, 100% { 
+        transform: translateX(0) translateY(0) scale(1) rotate(0deg);
+        filter: hue-rotate(0deg) blur(1px);
+      }
+      25% { 
+        transform: translateX(-8px) translateY(-4px) scale(1.05) rotate(1deg);
+        filter: hue-rotate(10deg) blur(1.2px);
+      }
+      50% { 
+        transform: translateX(6px) translateY(-6px) scale(1.1) rotate(-1deg);
+        filter: hue-rotate(20deg) blur(1.5px);
+      }
+      75% { 
+        transform: translateX(-4px) translateY(-8px) scale(1.05) rotate(0.5deg);
+        filter: hue-rotate(10deg) blur(1.2px);
+      }
+    }
+
+    @keyframes waterSurface {
+      0% { 
+        transform: perspective(800px) rotateX(60deg) translateX(0) scaleY(1);
+        opacity: 0.8;
+      }
+      25% { 
+        transform: perspective(800px) rotateX(60deg) translateX(-10px) scaleY(1.1);
+        opacity: 1;
+      }
+      50% { 
+        transform: perspective(800px) rotateX(60deg) translateX(-15px) scaleY(0.9);
+        opacity: 0.9;
+      }
+      75% { 
+        transform: perspective(800px) rotateX(60deg) translateX(-5px) scaleY(1.05);
+        opacity: 0.95;
+      }
+      100% { 
+        transform: perspective(800px) rotateX(60deg) translateX(0) scaleY(1);
+        opacity: 0.8;
+      }
+    }
+
+    @keyframes float {
+      0%, 100% { 
+        transform: translateY(0px) rotate(0deg) scale(1);
+        opacity: 0.8;
+        filter: brightness(1);
+      }
+      25% { 
+        transform: translateY(-10px) rotate(5deg) scale(1.1);
+        opacity: 1;
+        filter: brightness(1.2);
+      }
+      50% { 
+        transform: translateY(-15px) rotate(10deg) scale(1.05);
+        opacity: 0.9;
+        filter: brightness(1.1);
+      }
+      75% { 
+        transform: translateY(-8px) rotate(3deg) scale(1.15);
+        opacity: 1;
+        filter: brightness(1.3);
+      }
+    }
+
+    @keyframes rain {
+      0% { 
+        transform: translateY(-80px) scaleY(0) rotate(0deg);
+        opacity: 0;
+      }
+      20% { 
+        opacity: 1;
+        transform: translateY(-60px) scaleY(0.5) rotate(1deg);
+      }
+      50% { 
+        opacity: 1;
+        transform: translateY(0px) scaleY(1) rotate(0deg);
+      }
+      80% { 
+        opacity: 0.8;
+        transform: translateY(60px) scaleY(1) rotate(-1deg);
+      }
+      100% { 
+        transform: translateY(150px) scaleY(1) rotate(0deg);
+        opacity: 0;
+      }
+    }
+
+    @keyframes waterRise {
+      0%, 100% { 
+        height: 40px;
+        transform: perspective(800px) rotateX(45deg) translateY(0) scaleY(1);
+        filter: brightness(1) blur(0.5px);
+      }
+      25% { 
+        height: 45px;
+        transform: perspective(800px) rotateX(45deg) translateY(-3px) scaleY(1.05);
+        filter: brightness(1.1) blur(0.3px);
+      }
+      50% { 
+        height: 50px;
+        transform: perspective(800px) rotateX(45deg) translateY(-6px) scaleY(1.1);
+        filter: brightness(1.2) blur(0.2px);
+      }
+      75% { 
+        height: 47px;
+        transform: perspective(800px) rotateX(45deg) translateY(-4px) scaleY(1.08);
+        filter: brightness(1.15) blur(0.4px);
+      }
+    }
+
+    .header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      position: relative;
+      z-index: 1;
+    }
+
+    .header p {
+      font-size: 0.9rem;
+      opacity: 0.9;
+      font-weight: 300;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Main Content */
+    .main-content {
+      padding: 15px;
+      max-width: 100%;
+      margin: 0 auto;
+    }
+
+    /* Status Cards */
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .status-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(15px);
+      padding: 15px;
+      border-radius: 15px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .status-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+      background-size: 200% 100%;
+      animation: gradientMove 3s ease infinite;
+    }
+
+    .status-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+    }
+
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .status-card h3 {
+      color: #1e3c72;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-card .value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #667eea;
+      margin-bottom: 5px;
+    }
+
+    .status-card .status {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 12px;
+      display: inline-block;
+    }
+
+    .status-high {
+      background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+      color: white;
+      box-shadow: 0 2px 8px rgba(238, 90, 82, 0.3);
+      animation: pulse 2s infinite;
+    }
+
+    .status-medium {
+      background: linear-gradient(135deg, #feca57, #ff9ff3);
+      color: white;
+      box-shadow: 0 2px 8px rgba(254, 202, 87, 0.3);
+    }
+
+    .status-low {
+      background: linear-gradient(135deg, #48dbfb, #0abde3);
+      color: white;
+      box-shadow: 0 2px 8px rgba(72, 219, 251, 0.3);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* Forecast Section */
+    .forecast-section {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(15px);
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      border: 1px solid rgba(255,255,255,0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .forecast-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+      background-size: 200% 100%;
+      animation: gradientMove 3s ease infinite;
+    }
+
+    .forecast-section h2 {
+      color: #1e3c72;
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .forecast-section h2 i {
+      font-size: 1.4rem;
+      color: #667eea;
+    }
+
+    /* Chart Container */
+    .chart-container {
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+      border-radius: 15px;
+      padding: 15px;
+      box-shadow: inset 0 0 15px rgba(102, 126, 234, 0.1);
+      border: 1px solid rgba(102, 126, 234, 0.1);
+      margin-bottom: 15px;
+      height: 200px;
+      position: relative;
+    }
+
+    #forecastChart {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* Forecast List */
+    .forecast-list {
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+
+    .forecast-list::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .forecast-list::-webkit-scrollbar-track {
+      background: rgba(102, 126, 234, 0.1);
+      border-radius: 2px;
+    }
+
+    .forecast-list::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 2px;
+    }
+
+    .forecast-item {
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
+
+    .forecast-item:last-child {
+      border-bottom: none;
+    }
+
+    .forecast-item:hover {
+      background: rgba(102, 126, 234, 0.05);
+      padding-left: 8px;
+      border-radius: 8px;
+    }
+
+    .day-info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .day-name {
+      font-weight: 600;
+      color: #1e3c72;
+      font-size: 0.9rem;
+    }
+
+    .weather-desc {
+      font-size: 0.8rem;
+      color: #666;
+      opacity: 0.8;
+    }
+
+    .risk-indicator {
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+    }
+
+    .risk-indicator:hover {
+      transform: scale(1.05);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    }
+
+    .risk-low {
+      background: linear-gradient(135deg, #48dbfb, #0abde3);
+      color: white;
+      box-shadow: 0 2px 6px rgba(72, 219, 251, 0.3);
+    }
+
+    .risk-medium {
+      background: linear-gradient(135deg, #feca57, #ff9ff3);
+      color: white;
+      box-shadow: 0 2px 6px rgba(254, 202, 87, 0.3);
+    }
+
+    .risk-high {
+      background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+      color: white;
+      box-shadow: 0 2px 6px rgba(238, 90, 82, 0.3);
+      animation: pulse 2s infinite;
+    }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255,255,255,0.2);
+      padding: 10px 0;
+      display: flex;
+      justify-content: space-around;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 12px;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      color: #666;
+      text-decoration: none;
+    }
+
+    .nav-item.active {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .nav-item:hover {
+      transform: translateY(-2px);
+    }
+
+    .nav-item i {
+      font-size: 1.2rem;
+    }
+
+    .nav-item span {
+      font-size: 0.7rem;
+      font-weight: 500;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 15px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+      backdrop-filter: blur(10px);
+      color: white;
+      margin-top: 20px;
+      margin-bottom: 80px;
+      border-radius: 15px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    /* Loading Animation */
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 360px) {
+      .header h1 {
+        font-size: 1.6rem;
+      }
+      
+      .status-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .status-card .value {
+        font-size: 1.2rem;
+      }
+    }
+
+    /* Touch-friendly interactions */
+    @media (hover: none) {
+      .status-card:hover {
+        transform: none;
+      }
+      
+      .forecast-item:hover {
+        background: none;
+        padding-left: 0;
+      }
+      
+      .nav-item:hover {
+        transform: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- SEAS Logo Floating -->
+  <img src="SEAS_LOGO_Transparent.png" alt="SEAS Logo" class="seas-logo">
+  
+  <!-- Header -->
+  <header class="header">
+    <!-- 3D Flood Effects -->
+    <div class="floating-debris">
+      <div class="debris">🌊</div>
+      <div class="debris">🌧️</div>
+      <div class="debris">💧</div>
+      <div class="debris">🌊</div>
+      <div class="debris">🌧️</div>
+    </div>
+    
+    <div class="rain-container">
+      <div class="rain-drop"></div>
+      <div class="rain-drop"></div>
+      <div class="rain-drop"></div>
+      <div class="rain-drop"></div>
+      <div class="rain-drop"></div>
+      <div class="rain-drop"></div>
+      <div class="rain-drop"></div>
+      <div class="rain-drop"></div>
+      <div class="rain-drop"></div>
+      <div class="rain-drop"></div>
+    </div>
+    
+    <div class="water-level"></div>
+    
+    <h1><i class="fas fa-water"></i> Dự Báo Lũ Lụt</h1>
+    <p>Miền Trung Việt Nam - Giám Sát Thời Gian Thực</p>
+  </header>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Status Cards -->
+    <div class="status-grid">
+      <div class="status-card">
+        <h3><i class="fas fa-cloud-rain"></i> Lượng Mưa</h3>
+        <div class="value">120 mm</div>
+        <div class="status status-high">Cao ⚠️</div>
+      </div>
+      
+      <div class="status-card">
+        <h3><i class="fas fa-water"></i> Mực Nước</h3>
+        <div class="value">3.2 m</div>
+        <div class="status status-high">Cao ⚠️</div>
+      </div>
+      
+      <div class="status-card">
+        <h3><i class="fas fa-stream"></i> Dòng Chảy</h3>
+        <div class="value">450 m³/s</div>
+        <div class="status status-medium">Trung Bình</div>
+      </div>
+      
+      <div class="status-card">
+        <h3><i class="fas fa-exclamation-triangle"></i> Nguy Cơ</h3>
+        <div class="value">Cao</div>
+        <div class="status status-high">Cảnh Báo ⚠️</div>
+      </div>
+    </div>
+
+    <!-- Forecast Section -->
+    <div class="forecast-section">
+      <h2><i class="fas fa-chart-line"></i> Dự Báo 7 Ngày</h2>
+      
+      <!-- Chart -->
+      <div class="chart-container">
+        <canvas id="forecastChart"></canvas>
+      </div>
+      
+      <!-- Forecast List -->
+      <div class="forecast-list">
+        <div class="forecast-item">
+          <div class="day-info">
+            <span class="day-name"><i class="fas fa-sun"></i> Thứ Bảy</span>
+            <span class="weather-desc">Trời quang ☀️</span>
+          </div>
+          <span class="risk-indicator risk-low">Thấp</span>
+        </div>
+        
+        <div class="forecast-item">
+          <div class="day-info">
+            <span class="day-name"><i class="fas fa-cloud-rain"></i> Chủ Nhật</span>
+            <span class="weather-desc">Mưa nhẹ (15mm)</span>
+          </div>
+          <span class="risk-indicator risk-low">Thấp</span>
+        </div>
+        
+        <div class="forecast-item">
+          <div class="day-info">
+            <span class="day-name"><i class="fas fa-cloud-rain"></i> Thứ Hai</span>
+            <span class="weather-desc">Mưa nhẹ (15mm)</span>
+          </div>
+          <span class="risk-indicator risk-low">Thấp</span>
+        </div>
+        
+        <div class="forecast-item">
+          <div class="day-info">
+            <span class="day-name"><i class="fas fa-cloud-rain"></i> Thứ Ba</span>
+            <span class="weather-desc">Mưa nhẹ (15mm)</span>
+          </div>
+          <span class="risk-indicator risk-medium">Trung Bình</span>
+        </div>
+        
+        <div class="forecast-item">
+          <div class="day-info">
+            <span class="day-name"><i class="fas fa-cloud-showers-heavy"></i> Thứ Tư</span>
+            <span class="weather-desc">Mưa lớn (110mm) 🌧️</span>
+          </div>
+          <span class="risk-indicator risk-high">Cao ⚠️</span>
+        </div>
+        
+        <div class="forecast-item">
+          <div class="day-info">
+            <span class="day-name"><i class="fas fa-cloud-rain"></i> Thứ Năm</span>
+            <span class="weather-desc">Mưa vừa (70mm)</span>
+          </div>
+          <span class="risk-indicator risk-medium">Trung Bình</span>
+        </div>
+        
+        <div class="forecast-item">
+          <div class="day-info">
+            <span class="day-name"><i class="fas fa-cloud-rain"></i> Thứ Sáu</span>
+            <span class="weather-desc">Mưa rào (30mm)</span>
+          </div>
+          <span class="risk-indicator risk-low">Thấp</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p><i class="fas fa-shield-alt"></i> Hệ thống giám sát thời gian thực được hỗ trợ bởi phân tích thời tiết tiên tiến</p>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <a href="#" class="nav-item active">
+      <i class="fas fa-home"></i>
+      <span>Trang Chủ</span>
+    </a>
+    <a href="#" class="nav-item">
+      <i class="fas fa-map"></i>
+      <span>Bản Đồ</span>
+    </a>
+    <a href="#" class="nav-item">
+      <i class="fas fa-chart-bar"></i>
+      <span>Thống Kê</span>
+    </a>
+    <a href="#" class="nav-item">
+      <i class="fas fa-cog"></i>
+      <span>Cài Đặt</span>
+    </a>
+  </nav>
+
+  <script>
+    // Enhanced Chart with mobile optimization
+    const forecastCtx = document.getElementById('forecastChart').getContext('2d');
+    new Chart(forecastCtx, {
+      type: 'bar',
+      data: {
+        labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
+        datasets: [{
+          label: 'Lượng Mưa (mm)',
+          data: [15, 15, 110, 70, 30, 0, 15],
+          backgroundColor: [
+            'rgba(102, 126, 234, 0.8)',
+            'rgba(118, 75, 162, 0.8)',
+            'rgba(255, 107, 107, 0.8)',
+            'rgba(254, 202, 87, 0.8)',
+            'rgba(72, 219, 251, 0.8)',
+            'rgba(255, 159, 243, 0.8)',
+            'rgba(102, 126, 234, 0.6)'
+          ],
+          borderColor: [
+            'rgba(102, 126, 234, 1)',
+            'rgba(118, 75, 162, 1)',
+            'rgba(255, 107, 107, 1)',
+            'rgba(254, 202, 87, 1)',
+            'rgba(72, 219, 251, 1)',
+            'rgba(255, 159, 243, 1)',
+            'rgba(102, 126, 234, 1)'
+          ],
+          borderWidth: 2,
+          borderRadius: 6,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { 
+              display: true, 
+              text: 'Lượng Mưa (mm)',
+              color: '#1e3c72',
+              font: {
+                family: 'Poppins',
+                size: 10,
+                weight: '600'
+              }
+            },
+            grid: {
+              color: 'rgba(102, 126, 234, 0.1)'
+            },
+            ticks: {
+              color: '#1e3c72',
+              font: {
+                family: 'Poppins',
+                size: 9
+              }
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            },
+            ticks: {
+              color: '#1e3c72',
+              font: {
+                family: 'Poppins',
+                size: 9,
+                weight: '600'
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Interactive effects for mobile
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add touch effects to status cards
+      const statusCards = document.querySelectorAll('.status-card');
+      statusCards.forEach(card => {
+        card.addEventListener('touchstart', function() {
+          this.style.transform = 'scale(0.98)';
+        });
+        card.addEventListener('touchend', function() {
+          this.style.transform = 'scale(1)';
+        });
+      });
+
+      // Add touch effects to forecast items
+      const forecastItems = document.querySelectorAll('.forecast-item');
+      forecastItems.forEach(item => {
+        item.addEventListener('touchstart', function() {
+          this.style.background = 'rgba(102, 126, 234, 0.1)';
+        });
+        item.addEventListener('touchend', function() {
+          setTimeout(() => {
+            this.style.background = '';
+          }, 200);
+        });
+      });
+
+      // Bottom navigation interaction
+      const navItems = document.querySelectorAll('.nav-item');
+      navItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+          e.preventDefault();
+          navItems.forEach(nav => nav.classList.remove('active'));
+          this.classList.add('active');
+        });
+      });
+
+      // Add pull-to-refresh effect
+      let startY = 0;
+      let currentY = 0;
+      let pulling = false;
+
+      document.addEventListener('touchstart', function(e) {
+        if (window.scrollY === 0) {
+          startY = e.touches[0].clientY;
+          pulling = true;
+        }
+      });
+
+      document.addEventListener('touchmove', function(e) {
+        if (pulling) {
+          currentY = e.touches[0].clientY;
+          const diff = currentY - startY;
+          if (diff > 0 && diff < 100) {
+            document.body.style.transform = `translateY(${diff * 0.3}px)`;
+          }
+        }
+      });
+
+      document.addEventListener('touchend', function() {
+        if (pulling) {
+          document.body.style.transform = '';
+          pulling = false;
+        }
+      });
+    });
+  </script>
+</body>
+</html>
