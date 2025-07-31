@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Flood Forecasting - Central Vietnam</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f0f8ff;
+    }
+
+    header {
+      background-color: #0077b6;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    #map {
+      height: 500px;
+    }
+
+    .content {
+      padding: 20px;
+    }
+
+    .forecast {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: auto;
+      margin-top: 10px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 10px;
+      background-color: #caf0f8;
+      color: #333;
+    }
+
+    .forecast-flex {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+.forecast-list {
+  flex: 1;
+  min-width: 180px;
+  margin: 0;
+  padding-left: 20px;
+}
+
+#forecastChart {
+  flex: 2;
+  max-width: 400px;
+  max-height: 300px;
+}
+
+.forecast-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.forecast-list {
+  flex: 1;
+  min-width: 200px;
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.chart-container {
+  flex: 1.5;
+  min-width: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  background-color: #f8fcff;
+  border-radius: 12px;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
+}
+
+#forecastChart {
+  max-width: 100%;
+  height: auto;
+}
+
+
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Flood Forecasting Dashboard</h1>
+    <p>Central Vietnam - Real-time Monitoring & Predictions</p>
+  </header>
+
+  <div id="map"></div>
+
+  <div class="content">
+    <div class="forecast">
+      <h2>📊 Dự báo thời tiết hôm nay (Sông Long Đại)</h2>
+      <p><strong>Lượng mưa:</strong> 120 mm</p>
+      <p><strong>Mực nước sông:</strong> 3.2 m</p>
+      <p><strong>Nguy cơ lũ lụt:</strong> Cao ⚠️</p>
+      <p><strong>Nguy cơ lũ lụt:</strong> Cao ⚠️</p>
+      <!-- <canvas id="todayChart"></canvas> -->
+    </div>
+  </div>
+
+
+<div class="forecast">
+  <h2>📈 Dự báo 7 ngày sắp tới</h2>
+  <div class="forecast-flex">
+    <ul class="forecast-list">
+      <li>Thứ Bảy: Trời quang ☀️</li>
+      <li>Chủ Nhật: Mưa nhẹ (15mm)</li>
+      <li>Thứ Hai: Mưa nhẹ (15mm)</li>
+      <li>Thứ Ba: Mưa nhẹ (15mm)</li>
+      <li>Thứ Tư: Mưa lớn (110mm) 🌧️</li>
+      <li>Thứ Năm: Mưa vừa (70mm)</li>
+      <li>Thứ Sáu: Mưa rào (30mm)</li>
+     
+    </ul>
+    <canvas id="forecastChart"></canvas>
+  </div>
+</div>
+
+
+
+  <!-- Leaflet.js -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Map
+    const map = L.map('map').setView([17.4005, 106.4100], 9);
+    L.tileLayer('https://api.maptiler.com/maps/basic-v2/{z}/{x}/{y}.png?key=Cr3tHNjg7FKkEsm1SvyR', {
+      attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a> & OpenStreetMap contributors',
+      tileSize: 512,
+      zoomOffset: -1
+    }).addTo(map);
+    L.marker([17.222917, 106.456250])
+      .addTo(map)
+      .bindPopup('<b>Long Đại River</b><br>Current river level: 3.2 m')
+      .openPopup();
+
+    // Chart: 5-Day Forecast
+    const forecastCtx = document.getElementById('forecastChart').getContext('2d');
+    new Chart(forecastCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Mon', 'Tue'],
+        datasets: [{
+          label: 'Rainfall (mm)',
+          data: [110, 70, 30, 0, 15, 15, 15],
+          backgroundColor: ['#0077b6', '#00b4d8', '#90e0ef', '#ade8f4', '#caf0f8']
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'mm' }
+          }
+        }
+      }
+    });
+
+    // Chart: Today Weather Overview
+    // const todayCtx = document.getElementById('todayChart').getContext('2d');
+    // new Chart(todayCtx, {
+    //   type: 'doughnut',
+    //   data: {
+    //     labels: ['Rainfall', 'River Level (x10)', 'Remaining Capacity'],
+    //     datasets: [{
+    //       label: 'Today Weather',
+    //       data: [120, 32, 100], // scale river level x10 to match rainfall range
+    //       backgroundColor: ['#0077b6', '#90e0ef', '#f0f8ff'],
+    //       hoverOffset: 10
+    //     }]
+    //   },
+    //   options: {
+    //     responsive: true
+    //   }
+    // });
+  </script>
+</body>
+</html>
