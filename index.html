@@ -945,13 +945,13 @@
       <h2><i class="fas fa-chart-line"></i> Dự Báo Thời Tiết Hôm Nay (Sông Long Đại)</h2>
       <div class="weather-info">
         <div class="weather-item">
-          <strong><i class="fas fa-cloud-rain"></i> Lượng mưa:</strong> 120 mm
+          <strong><i class="fas fa-cloud-rain"></i> Lượng mưa:</strong> Mấy con gà biết gì em
         </div>
         <div class="weather-item">
           <strong><i class="fas fa-water"></i> Mực nước sông:</strong> 3.2 m
         </div>
         <div class="weather-item">
-          <strong><i class="fas fa-stream"></i> Lưu lượng sông:</strong> 450 m³/s
+          <strong><i class="fas fa-stream"></i> Lưu lượng dòng chảy:</strong> 7.7 m³/s
         </div>
         <div class="weather-item">
           <strong><i class="fas fa-exclamation-triangle"></i> Nguy cơ lũ lụt:</strong>
@@ -1176,7 +1176,7 @@
       .bindPopup(`
         <div style="text-align: center; padding: 10px;">
           <h3 style="color: #1e3c72; margin: 0 0 10px 0;">🌊 Sông Long Đại</h3>
-          <p style="margin: 5px 0;"><strong>Mực Nước Hiện Tại:</strong> 3.2 m</p>
+          <p style="margin: 5px 0;"><strong>Lưu lượng dòng chảy:</strong> 7.7 m³/s</p>
           <p style="margin: 5px 0;"><strong>Nguy Cơ:</strong> <span style="color: #48dbfb; font-weight: bold;">Thấp</span></p>
           <div style="background: linear-gradient(135deg, #667eea, #764ba2); height: 4px; border-radius: 2px; margin-top: 10px;"></div>
         </div>
@@ -1190,8 +1190,8 @@
       data: {
         labels: ['Thứ Bảy', 'Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu'],
         datasets: [{
-          label: 'Lượng Mưa (mm)',
-          data: [0, 15, 15, 15, 110, 70, 30],
+          label: 'Lưu lượng dòng chảy (m³/s)',
+          data: [52, 47, 13, 5, 23, 6, 3],
           backgroundColor: [
             'rgba(102, 126, 234, 0.8)',
             'rgba(118, 75, 162, 0.8)',
@@ -1331,6 +1331,36 @@
             pointRadius: 0,
             fill: true,
             tension: 0.2
+          },
+          {
+            label: 'Cảnh báo thấp (300 m³/s)',
+            data: Array(labels.length).fill(300),
+            borderColor: 'rgba(255, 193, 7, 0.8)',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            borderDash: [5, 5],
+            pointRadius: 0,
+            fill: false
+          },
+          {
+            label: 'Cảnh báo trung bình (500 m³/s)',
+            data: Array(labels.length).fill(500),
+            borderColor: 'rgba(255, 152, 0, 0.8)',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            borderDash: [5, 5],
+            pointRadius: 0,
+            fill: false
+          },
+          {
+            label: 'Cảnh báo cao (900 m³/s)',
+            data: Array(labels.length).fill(900),
+            borderColor: 'rgba(244, 67, 54, 0.8)',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            borderDash: [5, 5],
+            pointRadius: 0,
+            fill: false
           }]
         },
         options: {
